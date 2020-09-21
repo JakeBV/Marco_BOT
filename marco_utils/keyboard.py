@@ -53,15 +53,14 @@ def spam_keyboard(user_id):
 
 def start_keyboard(its_admin):
     start_keyboard = InlineKeyboardMarkup()
-    start_keyboard.row(InlineKeyboardButton('Чат', url='t.me/shingeki_no_kyojin_official'),
-                       InlineKeyboardButton('Канал', url='t.me/shingeki_no_kyojin'))
+    start_keyboard.add(InlineKeyboardButton('Чат', url='t.me/shingeki_no_kyojin'))
     for k, v in start_dict.items():
         start_keyboard.add(InlineKeyboardButton(v, switch_inline_query=k))
     start_keyboard.add(InlineKeyboardButton('Стикерпак', url='https://t.me/addstickers/Attack_on_Titan_Anime'))
     start_keyboard.add(InlineKeyboardButton('Сделать и отправить мем', callback_data='create_memes'))
     if its_admin:
         start_keyboard.add(InlineKeyboardButton('Отправить сообщение в чат', callback_data='send'))
-    start_keyboard.add(InlineKeyboardButton('Мой исходный код', url='https://github.com/JakeBV/Marco_BOT'))
+    #start_keyboard.add(InlineKeyboardButton('Мой исходный код', url='https://github.com/JakeBV/Marco_BOT'))
     return start_keyboard
 
 

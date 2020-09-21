@@ -30,7 +30,7 @@ from marco_utils import release_calendar
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-bot = Bot(token=config['BOT']['token'],
+bot = Bot(token=config['BOT']['token'], #proxy='socks5://localhost:9050',
           parse_mode=types.ParseMode.HTML)
 
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -74,8 +74,12 @@ async def new_chat_members(message):
         user_first_name = message.from_user.first_name
 
         if user_id == angel:
-            await bot.promote_chat_member(snk_chat, user_id, can_delete_messages=True, can_invite_users=True,
-                                          can_restrict_members=True, can_pin_messages=True)
+            await bot.promote_chat_member(snk_chat, user_id, 
+            can_delete_messages=True,
+            can_invite_users=True,
+            can_restrict_members=True,
+            can_pin_messages=True,
+            can_promote_members=True)
             await bot.send_message(chat_id,
                                    f'С возвращением, <a href="tg://user?id={user_id}">{user_first_name}</a>!'
                                    f'\nДержи свой значок и пистолет')
@@ -161,6 +165,7 @@ async def when(message):
 async def talking(message):
     weights = (await mongo.find('admins_panel'))['weights']
     answer = random.choices([True, False], weights=weights)[0]
+
     if answer:
         messages = (await mongo.find('messages'))['messages']
         text = random.choice(messages).replace('<', '&lt;')
@@ -358,7 +363,6 @@ async def callback_private(callback_query: types.CallbackQuery):
         await bot.edit_message_text('Привет! Я - Марко БОТ. Выбери команду',
                                     chat_id, message_id,
                                     reply_markup=keyboard.start_keyboard(True if user_id == me else False))
-
 
 
 @dp.inline_handler(lambda query: query.query, state='*')

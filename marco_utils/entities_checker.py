@@ -1,8 +1,8 @@
 import re
 
 async def search_entities(bot, entities, text):
-    if len(entities) > 1:
-        return True
+   # if len(entities) > 1:
+    #    return True
     for ent in entities:
         if ent['type'] in ('url', 'email', 'text_link'):
             return True
