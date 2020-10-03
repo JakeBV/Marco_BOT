@@ -39,12 +39,16 @@ def days_counter(dates):
             hours_left = ''
             days_left = ''
             if minutes_to_date:
-                minutes_left = f' {minutes_to_date} {get_number_and_noun(minutes_to_date, "минута").split(" ")[-1]}'
+                minutes_text = get_number_and_noun(minutes_to_date, "минуты").split(" ")
+                if minutes_text[-2] == 'один':
+                    minutes_text[-1] = 'минуту'
+                minutes_left = f'{minutes_to_date} {minutes_text[-1]}'
             if hours_to_date:
-                hours_left = f' {hours_to_date} {get_number_and_noun(hours_to_date, "час").split(" ")[-1]}'
+                hours_left = f'{hours_to_date} {get_number_and_noun(hours_to_date, "час").split(" ")[-1]} '
             if days_to_date:
-                days_left = f' {days_to_date} {get_number_and_noun(days_to_date, "день").split(" ")[-1]}'
-            season_text = f'{episode}-й эпизод выйдет через{days_left}{hours_left}{minutes_left}.\n'
+                days_left = f'{days_to_date} {get_number_and_noun(days_to_date, "день").split(" ")[-1]} '
+            days_hour_minute = f'{days_left}{hours_left}{minutes_left}'.strip()
+            season_text = f'{episode}-й эпизод выйдет через {days_hour_minute}.\n'
     chapter = list(chapters)[-1]
     chapter_release_date = chapters[list(chapters)[-1]]
     if chapter_release_date < time.time():
