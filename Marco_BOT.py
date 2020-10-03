@@ -175,7 +175,7 @@ async def talking(message):
     weights = (await mongo.find('admins_panel'))['weights']
     answer = random.choices([True, False], weights=weights)[0]
 
-    if translator.detect(message.text).lang != 'ru':
+    if translator.detect(message.text).lang == 'uk':
         await message.reply(translator.translate(message.text, dest='ru').text, reply=True)
 
     if answer:
