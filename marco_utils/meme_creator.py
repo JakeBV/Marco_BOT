@@ -1,4 +1,5 @@
 import textwrap
+from io import BytesIO
 
 from PIL import ImageFont
 from PIL import Image
@@ -19,14 +20,13 @@ def prepare_text(top_string, bottom_string):
 
 
 # исходник этого куска https://github.com/danieldiekmeier/memegenerator
-# он немного отредактирован под себя, мне лень его переписывать заново
-def make_meme(topString, bottomString, filename, new_file):
+def make_meme(topString, bottomString, b, filename):
     if len(topString) > 45:
         topString = topString.splitlines()
     if len(bottomString) > 45:
         bottomString = bottomString.splitlines()
 
-    img = Image.open(filename)
+    img = Image.open(b)
     imageSize = img.size
 
     # find biggest font size that works
@@ -105,4 +105,8 @@ def make_meme(topString, bottomString, filename, new_file):
                           align='center')
         draw.text(bottomTextPosition, bottomString, (255, 255, 255), font=font)
 
-    img.save(new_file)
+    b = BytesIO()
+    b.name = filename
+    img.save(b, 'PNG')
+    b.seek(0)
+    return b

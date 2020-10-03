@@ -60,7 +60,6 @@ def start_keyboard(its_admin):
     start_keyboard.add(InlineKeyboardButton('Сделать и отправить мем', callback_data='create_memes'))
     if its_admin:
         start_keyboard.add(InlineKeyboardButton('Отправить сообщение в чат', callback_data='send'))
-    #start_keyboard.add(InlineKeyboardButton('Мой исходный код', url='https://github.com/JakeBV/Marco_BOT'))
     return start_keyboard
 
 

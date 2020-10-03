@@ -3,7 +3,6 @@ import re
 import asyncio
 import time
 import configparser
-import os
 import json
 from uuid import uuid4
 from datetime import timedelta
@@ -30,8 +29,7 @@ from marco_utils import release_calendar
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-bot = Bot(token=config['BOT']['token'], #proxy='socks5://localhost:9050',
-          parse_mode=types.ParseMode.HTML)
+bot = Bot(token=config['BOT']['token'], parse_mode=types.ParseMode.HTML)
 
 dp = Dispatcher(bot, storage=MemoryStorage())
 dp.middleware.setup(LoggingMiddleware())
@@ -70,48 +68,50 @@ async def new_chat_members(message):
     chat_id = message.chat.id
     await bot.delete_message(chat_id, message.message_id)
     user_id = message.from_user.id
-    if message.new_chat_members and user_id != me:
-        user_first_name = message.from_user.first_name
 
-        if user_id == angel:
+    if message.new_chat_members and user_id != me:
+        if user_id == angel and angel in [x.id for x in message.new_chat_members]:
             await bot.promote_chat_member(snk_chat, user_id, 
             can_delete_messages=True,
             can_invite_users=True,
             can_restrict_members=True,
             can_pin_messages=True,
-            can_promote_members=True)
+            can_promote_members=True,
+            can_change_info=True)
             await bot.send_message(chat_id,
-                                   f'С возвращением, <a href="tg://user?id={user_id}">{user_first_name}</a>!'
-                                   f'\nДержи свой значок и пистолет')
-
-        elif bool(re.search(u"[\u0621-\u064a]+", user_first_name)):
-            await bot.send_message(chat_id,
-                                   f'<a href="tg://user?id={user_id}">{user_first_name}</a> '
-                                   f'выставлен(а) за Стены. Мне не нравится это имя')
-            await bot.kick_chat_member(chat_id, user_id, until_date=int(time.time() + 60))
-
+                                   f'С возвращением, <a href="tg://user?id={user_id}">'
+                                   f'{message.from_user.first_name}</a>!\nДержи свой значок и пистолет')
         else:
-            message_id = (await bot.send_message(chat_id,
-                                                f'Приветствую в чате SnK, '
-                                                f'<a href="tg://user?id={user_id}">{user_first_name}</a>! '
-                                                f'Пожалуйста, докажи, что ты не робот или вторженец, нажав '
-                                                f'кнопку ниже. У тебя на это есть минута',
-                                                reply_markup=keyboard.new_member_keyboard(user_id))).message_id
-
-            await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[0])
-
-            await asyncio.sleep(65)
-            state = await dp.current_state(user=user_id).get_state()
-            if state == 's1_not_verification':
-                try:
-                    await bot.edit_message_text(f'<a href="tg://user?id={user_id}">{user_first_name}</a> '
-                                                f'выставлен(а) за Стены. Проверка не пройдена',
-                                                chat_id, message_id)
-                except exceptions.MessageToEditNotFound:
+            for user in message.new_chat_members:
+                user_first_name = user.first_name
+                user_id = user.id
+                if bool(re.search(u"[\u0621-\u064a]+", user_first_name)):
                     await bot.send_message(chat_id, f'<a href="tg://user?id={user_id}">{user_first_name}</a> '
-                                                    f'выставлен(а) за Стены. Проверка не пройдена')
-                await bot.kick_chat_member(chat_id, user_id)
-                await bot.unban_chat_member(chat_id, user_id)
+                                                    f'выставлен(а) за Стены. Мне не нравится это имя')
+                    await bot.kick_chat_member(chat_id, user_id, until_date=int(time.time() + 60))
+
+                elif not user.is_bot:
+                    message_id = (await bot.send_message(chat_id,
+                                                        f'Приветствую в чате SnK, '
+                                                        f'<a href="tg://user?id={user_id}">{user_first_name}</a>! '
+                                                        f'Пожалуйста, докажи, что ты не робот или вторженец, нажав '
+                                                        f'кнопку ниже. У тебя на это есть минута',
+                                                        reply_markup=keyboard.new_member_keyboard(user_id))).message_id
+
+                    await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[0])
+
+                    await asyncio.sleep(65)
+                    state = await dp.current_state(user=user_id).get_state()
+                    if state == 's1_not_verification':
+                        try:
+                            await bot.edit_message_text(f'<a href="tg://user?id={user_id}">{user_first_name}</a> '
+                                                        f'выставлен(а) за Стены. Проверка не пройдена',
+                                                        chat_id, message_id)
+                        except exceptions.MessageToEditNotFound:
+                            await bot.send_message(chat_id, f'<a href="tg://user?id={user_id}">{user_first_name}</a> '
+                                                            f'выставлен(а) за Стены. Проверка не пройдена')
+                        await bot.kick_chat_member(chat_id, user_id)
+                        await bot.unban_chat_member(chat_id, user_id)
 
 
 
@@ -127,17 +127,23 @@ async def hunt_for_spam(message):
     chat_id = message.chat.id
     message_id = message.message_id
     state = await dp.current_state(user=user_id).get_state()
+
     if state == 's1_not_verification':
         await bot.delete_message(chat_id, message_id)
 
-    elif message.entities or message.caption_entities:
+    elif message.entities or message.caption_entities or message.reply_markup:
         get_users_info = (await mongo.find('new_chat_members'))['new_chat_members'].get(f'{user_id}')
         if get_users_info is not None and time.time() - get_users_info['join_time'] < 86400:
-            its_spam = await entities_checker.search_entities(bot, message.entities, message.text)
+            if message.reply_markup:
+                text = '\n'.join([url.url for url in [x for x in message.reply_markup.inline_keyboard][0]])
+                its_spam = True
+            else:
+                entities = message.entities if message.entities else message.caption_entities
+                text = message.text if message.text else message.caption
+                its_spam = await entities_checker.search_entities(bot, entities, text)
             if its_spam:
                 await bot.delete_message(chat_id, message_id)
-                text_to_image.create_image(message.text, user_id)
-                photo = photo_upload.upload_photo(f'{user_id}.png')
+                photo = photo_upload.upload_photo(text_to_image.create_image(text, user_id))
                 member_time = time.time() - get_users_info['join_time']
                 remaining_time = str(timedelta(seconds=86400 - member_time)).split('.')[0].split(':')
                 h = f' {remaining_time[0]} ч' if remaining_time[0] != '0' else ''
@@ -149,7 +155,6 @@ async def hunt_for_spam(message):
                                        f'запрещено отправлять ссылки еще{h}{m}!\n\nСообщение:'
                                        f'<a href="https://telegra.ph/{photo}">​</a>',
                                        reply_markup=keyboard.spam_keyboard(user_id))
-                os.remove(f'images_with_text/{user_id}.png')
 
         else:
             await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[2])
@@ -274,7 +279,7 @@ async def callback_spam(callback_query: types.CallbackQuery):
 
 
 
-@dp.message_handler(types.ChatType.is_private, commands=['start'], state='*')
+@dp.message_handler(types.ChatType.is_private, state='*')
 async def start(message: types.Message):
     user_id = message.from_user.id
     await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[5])
@@ -319,22 +324,15 @@ async def send_message(message: types.Message):
                                        reply_markup=keyboard.cancel_button())
             else:
                 loading_message = (await bot.send_message(user_id, 'Минуту')).message_id
-                photo = f'memes/{user_id}.jpg'
-                new_file = f'memes/meme_{user_id}.jpg'
                 downloaded = await bot.download_file_by_id(message.photo[-1].file_id)
                 b = BytesIO()
                 b.write(downloaded.getvalue())
-                with open(photo, 'wb') as f:
-                    f.write(b.getvalue())
                 ready_top_string, ready_bottom_string = meme_creator.prepare_text(top_string, bottom_string)
-                meme_creator.make_meme(ready_top_string, ready_bottom_string, photo, new_file)
-                with open(new_file, 'rb') as f:
-                    file_id = (await bot.send_photo(dump, f)).photo[-1].file_id
+                b = meme_creator.make_meme(ready_top_string, ready_bottom_string, b, f'{user_id}.png')
+                file_id = (await bot.send_photo(dump, b)).photo[-1].file_id
                 await bot.delete_message(user_id, loading_message)
                 await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[5])
                 await bot.send_photo(user_id, file_id, reply_markup=keyboard.memes_send(file_id))
-                for remove in photo, new_file:
-                    os.remove(remove)
 
 
 
