@@ -16,6 +16,8 @@ from aiogram.utils import exceptions
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
+from googletrans import Translator
+
 from marco_utils import mongo
 from marco_utils import keyboard
 from marco_utils import entities_checker
@@ -30,6 +32,8 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 bot = Bot(token=config['BOT']['token'], parse_mode=types.ParseMode.HTML)
+
+translator = Translator()
 
 dp = Dispatcher(bot, storage=MemoryStorage())
 dp.middleware.setup(LoggingMiddleware())
@@ -170,6 +174,9 @@ async def when(message):
 async def talking(message):
     weights = (await mongo.find('admins_panel'))['weights']
     answer = random.choices([True, False], weights=weights)[0]
+
+    if translator.detect(message.text).lang != 'ru':
+        await message.reply(translator.translate(message.text, dest='ru').text, reply=True)
 
     if answer:
         messages = (await mongo.find('messages'))['messages']
