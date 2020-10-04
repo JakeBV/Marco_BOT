@@ -282,19 +282,6 @@ async def callback_spam(callback_query: types.CallbackQuery):
         await bot.answer_callback_query(callback_query.id, text='Ты мне не тыкай!')
 
 
-@dp.message_handler(types.ChatType.is_private, state='*')
-async def start(message: types.Message):
-    user_id = message.from_user.id
-    await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[5])
-    users_in_db = (await mongo.find('new_chat_members'))['users']
-    if str(user_id) not in users_in_db and user_id != me:
-        users_info = {'first_name': message.from_user.first_name,
-                      'username': message.from_user.username}
-        await mongo.update('new_chat_members', {'$set': {f'users.{user_id}': users_info}})
-    await bot.send_message(user_id, 'Привет! Я - Марко БОТ. Выбери команду',
-                           reply_markup=keyboard.start_keyboard(True if user_id == me else False))
-
-
 @dp.message_handler(types.ChatType.is_private, state=verification.VerificationStates.S5_SEND_MESSAGE)
 async def send_message(message: types.Message):
     user_id = message.from_user.id
@@ -333,6 +320,19 @@ async def send_message(message: types.Message):
                 await bot.delete_message(user_id, loading_message)
                 await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[5])
                 await bot.send_photo(user_id, file_id, reply_markup=keyboard.memes_send(file_id))
+
+
+@dp.message_handler(types.ChatType.is_private, state='*')
+async def start(message: types.Message):
+    user_id = message.from_user.id
+    await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[5])
+    users_in_db = (await mongo.find('new_chat_members'))['users']
+    if str(user_id) not in users_in_db and user_id != me:
+        users_info = {'first_name': message.from_user.first_name,
+                      'username': message.from_user.username}
+        await mongo.update('new_chat_members', {'$set': {f'users.{user_id}': users_info}})
+    await bot.send_message(user_id, 'Привет! Я - Марко БОТ. Выбери команду',
+                           reply_markup=keyboard.start_keyboard(True if user_id == me else False))
 
 
 @dp.callback_query_handler(lambda call: call.data, state='*')
