@@ -29,7 +29,7 @@ from marco_utils import release_calendar
 
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini.back')
 
 bot = Bot(token=config['BOT']['token'], parse_mode=types.ParseMode.HTML)
 
@@ -42,8 +42,6 @@ snk_chat = int(config['BOT']['chat'])
 angel = int(config['BOT']['angel'])
 me = int(config['BOT']['me'])
 dump = int(config['BOT']['dump'])
-
-
 
 
 @dp.message_handler(chat_id=snk_chat, commands=['tweaks'])
@@ -64,8 +62,6 @@ async def activity_settings(message):
                                 caption=f'<a href="tg://user?id={user_id}">Не лезь</a>, оно тебя сожрет')
 
 
-
-
 @dp.message_handler(chat_id=snk_chat, content_types=[ContentType.NEW_CHAT_MEMBERS, ContentType.LEFT_CHAT_MEMBER],
                     state='*')
 async def new_chat_members(message):
@@ -75,13 +71,9 @@ async def new_chat_members(message):
 
     if message.new_chat_members and user_id != me:
         if user_id == angel and angel in [x.id for x in message.new_chat_members]:
-            await bot.promote_chat_member(snk_chat, user_id, 
-            can_delete_messages=True,
-            can_invite_users=True,
-            can_restrict_members=True,
-            can_pin_messages=True,
-            can_promote_members=True,
-            can_change_info=True)
+            await bot.promote_chat_member(snk_chat, user_id, can_delete_messages=True, can_invite_users=True,
+                                          can_restrict_members=True, can_pin_messages=True, can_promote_members=True,
+                                          can_change_info=True)
             await bot.send_message(chat_id,
                                    f'С возвращением, <a href="tg://user?id={user_id}">'
                                    f'{message.from_user.first_name}</a>!\nДержи свой значок и пистолет')
@@ -95,12 +87,12 @@ async def new_chat_members(message):
                     await bot.kick_chat_member(chat_id, user_id, until_date=int(time.time() + 60))
 
                 elif not user.is_bot:
-                    message_id = (await bot.send_message(chat_id,
-                                                        f'Приветствую в чате SnK, '
-                                                        f'<a href="tg://user?id={user_id}">{user_first_name}</a>! '
-                                                        f'Пожалуйста, докажи, что ты не робот или вторженец, нажав '
-                                                        f'кнопку ниже. У тебя на это есть минута',
-                                                        reply_markup=keyboard.new_member_keyboard(user_id))).message_id
+                    message_id = (await bot.send_message(chat_id, f'Приветствую в чате SnK, <a href="tg:'
+                                                                  f'//user?id={user_id}">{user_first_name}</a>! '
+                                                                  f'Пожалуйста, докажи, что ты не робот или вторженец,'
+                                                                  f' нажав кнопку ниже. У тебя на это есть минута',
+                                                                  reply_markup=keyboard.new_member_keyboard(user_id))
+                                  ).message_id
 
                     await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[0])
 
@@ -118,14 +110,12 @@ async def new_chat_members(message):
                         await bot.unban_chat_member(chat_id, user_id)
 
 
-
-
 @dp.message_handler(content_types=ContentType.ANY, chat_id=snk_chat,
                     state=verification.VerificationStates.S1_NOT_VERIFICATION |
-                          verification.VerificationStates.S2_VERIFICATION |
-                          verification.VerificationStates.S6_START |
-                          verification.VerificationStates.S5_SEND_MESSAGE |
-                          verification.VerificationStates.S4_CREATE_MEMES)
+                    verification.VerificationStates.S2_VERIFICATION |
+                    verification.VerificationStates.S6_START |
+                    verification.VerificationStates.S5_SEND_MESSAGE |
+                    verification.VerificationStates.S4_CREATE_MEMES)
 async def hunt_for_spam(message):
     user_id = message.from_user.id
     chat_id = message.chat.id
@@ -139,12 +129,14 @@ async def hunt_for_spam(message):
         get_users_info = (await mongo.find('new_chat_members'))['new_chat_members'].get(f'{user_id}')
         if get_users_info is not None and time.time() - get_users_info['join_time'] < 86400:
             if message.reply_markup:
-                text = '\n'.join([url.url for url in [x for x in message.reply_markup.inline_keyboard][0]])
-                its_spam = True
+                its_spam = await entities_checker.search_urls_in_keyboard(message.reply_markup.inline_keyboard)
+                text = '\n'.join(its_spam)
+                clarification = 'Ссылки в клавиатуре'
             else:
-                entities = message.entities if message.entities else message.caption_entities
-                text = message.text if message.text else message.caption
+                entities = message.entities or message.caption_entities
+                text = message.text or message.caption
                 its_spam = await entities_checker.search_entities(bot, entities, text)
+                clarification = 'Сообщение'
             if its_spam:
                 await bot.delete_message(chat_id, message_id)
                 photo = photo_upload.upload_photo(text_to_image.create_image(text, user_id))
@@ -156,7 +148,7 @@ async def hunt_for_spam(message):
                     m = ' минуту'
                 await bot.send_message(chat_id,
                                        f'<a href="tg://user?id={user_id}">{get_users_info["first_name"]}</a>, тебе '
-                                       f'запрещено отправлять ссылки еще{h}{m}!\n\nСообщение:'
+                                       f'запрещено отправлять ссылки еще{h}{m}!\n\n{clarification}:'
                                        f'<a href="https://telegra.ph/{photo}">​</a>',
                                        reply_markup=keyboard.spam_keyboard(user_id))
 
@@ -176,9 +168,20 @@ async def talking(message):
     answer = random.choices([True, False], weights=weights)[0]
 
     if translator.detect(message.text).lang == 'uk':
-        await message.reply(translator.translate(message.text, dest='ru').text, reply=True)
+        text = translator.translate(message.text, dest='ru').text
+        await message.reply(text, reply=True)
 
-    if answer:
+    elif (message.text in ('!', '?') and message.reply_to_message) or message.text[:2] in ('! ', '? '):
+        text = message.text[2:]
+        message_id = message.message_id
+        destination = 'ru' if message.text[0] == '!' else 'uk'
+        if message.reply_to_message:
+            text = message.reply_to_message.text
+            message_id = message.reply_to_message.message_id
+        text = translator.translate(text, dest=destination).text
+        await bot.send_message(snk_chat, text, reply_to_message_id=message_id)
+
+    elif answer:
         messages = (await mongo.find('messages'))['messages']
         text = random.choice(messages).replace('<', '&lt;')
         typing_time = len(text) / 6
@@ -188,11 +191,8 @@ async def talking(message):
             await message.reply(text, reply=random.choice([True, False]))
         except exceptions.BadRequest:
             await message.reply(text, reply=False)
-
-    if len(message.text) > 3 and len(message.text) <= 65 and bool(re.search('[а-яА-Я]', message.text)):
+    if 3 <= len(message.text) <= 65 and bool(re.search('[а-яА-Я]', message.text)):
         await mongo.update('messages', {'$push': {'messages': message.text}})
-
-
 
 
 @dp.callback_query_handler(lambda call: call.data.split('=')[0] in keyboard.verified_dict, chat_id=snk_chat, state='*')
@@ -228,7 +228,6 @@ async def callback_verified(callback_query: types.CallbackQuery):
         await bot.answer_callback_query(callback_query.id, text='Ты не тыкай, это не тебе!')
 
 
-
 @dp.callback_query_handler(lambda call: call.data in keyboard.activities_dict, chat_id=snk_chat, state='*')
 async def callback_tweaks(callback_query: types.CallbackQuery):
     chat_id = callback_query.message.chat.id
@@ -245,12 +244,10 @@ async def callback_tweaks(callback_query: types.CallbackQuery):
         text = get_keyboard_and_text[1]
         if not activities:
             text = f'{text} <a href="https://telegra.ph/file/0ab05efa3a61aeff98a46.gif">​</a>'
-        await bot.edit_message_text(f'Тут можно настроить мою активность. {text}',
-                                        chat_id, callback_query.message.message_id,
-                                        reply_markup=activity_keyboard)
+        await bot.edit_message_text(f'Тут можно настроить мою активность. {text}', chat_id,
+                                    callback_query.message.message_id, reply_markup=activity_keyboard)
     else:
         await bot.answer_callback_query(callback_query.id, text='Ты мне не тыкай!')
-
 
 
 @dp.callback_query_handler(lambda call: call.data, chat_id=snk_chat, state='*')
@@ -285,7 +282,6 @@ async def callback_spam(callback_query: types.CallbackQuery):
         await bot.answer_callback_query(callback_query.id, text='Ты мне не тыкай!')
 
 
-
 @dp.message_handler(types.ChatType.is_private, state='*')
 async def start(message: types.Message):
     user_id = message.from_user.id
@@ -299,15 +295,12 @@ async def start(message: types.Message):
                            reply_markup=keyboard.start_keyboard(True if user_id == me else False))
 
 
-
-
 @dp.message_handler(types.ChatType.is_private, state=verification.VerificationStates.S5_SEND_MESSAGE)
 async def send_message(message: types.Message):
     user_id = message.from_user.id
     await bot.send_message(snk_chat, message.text)
     await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[5])
     await bot.send_message(user_id, 'Сообщение отправлено')
-
 
 
 @dp.message_handler(types.ChatType.is_private, state=verification.VerificationStates.S4_CREATE_MEMES,
@@ -342,8 +335,6 @@ async def send_message(message: types.Message):
                 await bot.send_photo(user_id, file_id, reply_markup=keyboard.memes_send(file_id))
 
 
-
-
 @dp.callback_query_handler(lambda call: call.data, state='*')
 async def callback_private(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
@@ -360,9 +351,8 @@ async def callback_private(callback_query: types.CallbackQuery):
                                     reply_markup=keyboard.cancel_button())
     elif callback_query.data == 'send':
         await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[4])
-        await bot.edit_message_text(f'Пришли текст сообщения, которое нужно отправить',
-                               chat_id, message_id,
-                               reply_markup=keyboard.cancel_button())
+        await bot.edit_message_text(f'Пришли текст сообщения, которое нужно отправить', chat_id, message_id,
+                                    reply_markup=keyboard.cancel_button())
     elif callback_query.data == 'cancel':
         await dp.current_state(user=user_id).set_state(verification.VerificationStates.all()[5])
         await bot.edit_message_text('Привет! Я - Марко БОТ. Выбери команду',
@@ -377,21 +367,22 @@ async def inline(inline_query: types.InlineQuery):
             data = json.load(json_file)
         results = []
         for file in data[inline_query.query]:
-            ID = uuid4().hex
+            id_ = uuid4().hex
             if inline_query.query in ('gif', 'rascal'):
-                thumb = types.InlineQueryResultCachedMpeg4Gif(id=ID, mpeg4_file_id=file)
+                thumb = types.InlineQueryResultCachedMpeg4Gif(id=id_, mpeg4_file_id=file)
             else:
-                thumb = types.InlineQueryResultCachedSticker(id=ID, sticker_file_id=file)
+                thumb = types.InlineQueryResultCachedSticker(id=id_, sticker_file_id=file)
             results.append(thumb)
         await bot.answer_inline_query(inline_query.id, results,
                                       switch_pm_text='Другие команды', switch_pm_parameter='start')
     elif inline_query.query.split('=')[0] == 'send_memes':
-        file_id = inline_query.query.split('=')[1]
         try:
+            file_id = inline_query.query.split('=')[1]
             await bot.answer_inline_query(inline_query.id,
-                                      [types.InlineQueryResultCachedPhoto(id=uuid4().hex, photo_file_id=file_id)],
-                                      switch_pm_text='Другие команды', switch_pm_parameter='start')
-        except(exceptions.WrongFileIdentifier, exceptions.WrongRemoteFileIdSpecified):
+                                          [types.InlineQueryResultCachedPhoto(id=uuid4().hex, photo_file_id=file_id)],
+                                          switch_pm_text='Другие команды', switch_pm_parameter='start')
+        except(exceptions.WrongFileIdentifier, exceptions.WrongRemoteFileIdSpecified,
+               exceptions.BadRequest, IndexError):
             text = 'Я делаю мемасы с помощью @marco_bot'
             await bot.answer_inline_query(
                 inline_query.id,
@@ -410,12 +401,9 @@ async def inline(inline_query: types.InlineQuery):
             switch_pm_text='Другие команды', switch_pm_parameter='start')
 
 
-
-
 async def shutdown(dispatcher: Dispatcher):
     await dispatcher.storage.close()
     await dispatcher.storage.wait_closed()
-
 
 
 if __name__ == '__main__':

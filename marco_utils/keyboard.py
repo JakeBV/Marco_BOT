@@ -13,9 +13,8 @@ activities_dict = {'turn_off': [0, '👍🏿'],
                    'often': [75, 'Буду отвечать с вероятностью 75%']}
 
 start_dict = {'gif': 'Отправить GIF', 'rascal': 'Отправить GIF (Енот Раскал)', 'sticker': 'Отправить стикер',
-              'chimi-chara': 'Отправить стикер (Chimi-Chara)','chimi-chara-2': 'Отправить стикер (Chimi-Chara Part 2)',
+              'chimi-chara': 'Отправить стикер (Chimi-Chara)', 'chimi-chara-2': 'Отправить стикер (Chimi-Chara Part 2)',
               'when': 'Когда новая серия или глава?'}
-
 
 
 def activity_settings_keyboard(current_activity):
@@ -43,24 +42,24 @@ def new_member_keyboard(user_id):
 
 
 def spam_keyboard(user_id):
-    spam_keyboard = InlineKeyboardMarkup()
+    sp_keyboard = InlineKeyboardMarkup()
     spam_dict = {'block': 'Выставить за Стены',
                  'disable_antispam': 'Отключить антиспам'}
     for k, v in spam_dict.items():
-        spam_keyboard.add(InlineKeyboardButton(v, callback_data=f'{k}={user_id}'))
-    return spam_keyboard
+        sp_keyboard.add(InlineKeyboardButton(v, callback_data=f'{k}={user_id}'))
+    return sp_keyboard
 
 
 def start_keyboard(its_admin):
-    start_keyboard = InlineKeyboardMarkup()
-    start_keyboard.add(InlineKeyboardButton('Чат', url='t.me/shingeki_no_kyojin'))
+    st_keyboard = InlineKeyboardMarkup()
+    st_keyboard.add(InlineKeyboardButton('Чат', url='t.me/shingeki_no_kyojin'))
     for k, v in start_dict.items():
-        start_keyboard.add(InlineKeyboardButton(v, switch_inline_query=k))
-    start_keyboard.add(InlineKeyboardButton('Стикерпак', url='https://t.me/addstickers/Attack_on_Titan_Anime'))
-    start_keyboard.add(InlineKeyboardButton('Сделать и отправить мем', callback_data='create_memes'))
+        st_keyboard.add(InlineKeyboardButton(v, switch_inline_query=k))
+    st_keyboard.add(InlineKeyboardButton('Стикерпак', url='https://t.me/addstickers/Attack_on_Titan_Anime'))
+    st_keyboard.add(InlineKeyboardButton('Сделать и отправить мем', callback_data='create_memes'))
     if its_admin:
-        start_keyboard.add(InlineKeyboardButton('Отправить сообщение в чат', callback_data='send'))
-    return start_keyboard
+        st_keyboard.add(InlineKeyboardButton('Отправить сообщение в чат', callback_data='send'))
+    return st_keyboard
 
 
 def memes_send(file_id):

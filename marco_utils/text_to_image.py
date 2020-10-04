@@ -27,4 +27,3 @@ def create_image(message, title):
     background.save(b, 'PNG')
     b.seek(0)
     return b
-

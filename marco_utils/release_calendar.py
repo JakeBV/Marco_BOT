@@ -7,6 +7,7 @@ from datetime import timedelta
 from num2t4ru import num2text
 import pymorphy2
 
+
 def days_counter(dates):
     season = dates['season']
     chapters = dates['chapters']
@@ -67,17 +68,9 @@ def days_counter(dates):
     return f'<b>У меня {now} (GMT+3)</b>\n{season_text}{chapter_text}{birthday_text}'
 
 
-
-
 # источник http://zabaykin.ru/?p=415
 def get_number_and_noun(numeral, noun):
     morph = pymorphy2.MorphAnalyzer()
     word = morph.parse(noun)[0]
     v1, v2, v3 = word.inflect({'sing', 'nomn'}), word.inflect({'gent'}), word.inflect({'plur', 'gent'})
     return num2text(num=numeral, main_units=((v1.word, v2.word, v3.word), 'm'))
-
-
-
-
-
-

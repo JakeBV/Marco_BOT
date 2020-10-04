@@ -6,7 +6,7 @@ import motor.motor_asyncio
 
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini.back')
 
 
 username = urllib.parse.quote_plus(config['MONGO']['username'])
@@ -30,10 +30,5 @@ async def find(key):
     return data
 
 
-
 async def update(key, data):
     await collection.find_one_and_update({'_id': ObjectId(db_dict[key])}, data)
-
-
-
-

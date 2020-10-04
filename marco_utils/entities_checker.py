@@ -1,5 +1,6 @@
 import re
 
+
 async def search_entities(bot, entities, text):
     for ent in entities:
         if ent['type'] in ('url', 'email', 'text_link'):
@@ -13,3 +14,9 @@ async def search_entities(bot, entities, text):
                 except:
                     pass
 
+
+async def search_urls_in_keyboard(inline_keyboard):
+    buttons = []
+    for row in inline_keyboard:
+        buttons.extend([button.url for button in row if button.url is not None])
+    return buttons
