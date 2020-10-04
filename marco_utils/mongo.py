@@ -6,7 +6,7 @@ import motor.motor_asyncio
 
 
 config = configparser.ConfigParser()
-config.read('config.ini.back')
+config.read('config.ini')
 
 
 username = urllib.parse.quote_plus(config['MONGO']['username'])

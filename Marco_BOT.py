@@ -29,7 +29,7 @@ from marco_utils import release_calendar
 
 
 config = configparser.ConfigParser()
-config.read('config.ini.back')
+config.read('config.ini')
 
 bot = Bot(token=config['BOT']['token'], parse_mode=types.ParseMode.HTML)
 
