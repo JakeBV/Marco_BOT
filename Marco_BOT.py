@@ -174,7 +174,7 @@ async def talking(message):
     elif (message.text in ('!', '?') and message.reply_to_message) or message.text[:2] in ('! ', '? '):
         text = message.text[2:]
         message_id = message.message_id
-        destination = 'ru' if message.text[0] == '!' else 'uk'
+        destination = 'ru' if message.text[0] == '?' else 'uk'
         if message.reply_to_message:
             text = message.reply_to_message.text
             message_id = message.reply_to_message.message_id
@@ -311,7 +311,7 @@ async def send_message(message: types.Message):
         await bot.send_message(user_id, 'Отправь картинку с подписью', reply_markup=keyboard.cancel_button())
     else:
         strings = message.caption.splitlines()
-        if len(strings) > 2 or len(strings) < 2:
+        if len(strings) != 2:
             await bot.send_message(user_id,
                                    'Подпись должна быть в таком формате: \n<code>Это верхняя строка\n'
                                    'Это нижняя строка</code>\nили\n<code>Это верхняя строка\n*</code>\nили\n'
@@ -381,8 +381,7 @@ async def inline(inline_query: types.InlineQuery):
             await bot.answer_inline_query(inline_query.id,
                                           [types.InlineQueryResultCachedPhoto(id=uuid4().hex, photo_file_id=file_id)],
                                           switch_pm_text='Другие команды', switch_pm_parameter='start')
-        except(exceptions.WrongFileIdentifier, exceptions.WrongRemoteFileIdSpecified,
-               exceptions.BadRequest, IndexError):
+        except(exceptions.BadRequest, IndexError):
             text = 'Я делаю мемасы с помощью @marco_bot'
             await bot.answer_inline_query(
                 inline_query.id,
