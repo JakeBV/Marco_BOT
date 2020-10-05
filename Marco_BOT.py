@@ -167,11 +167,7 @@ async def talking(message):
     weights = (await mongo.find('admins_panel'))['weights']
     answer = random.choices([True, False], weights=weights)[0]
 
-    if translator.detect(message.text).lang == 'uk':
-        text = translator.translate(message.text, dest='ru').text
-        await message.reply(text, reply=True)
-
-    elif (message.text in ('!', '?') and message.reply_to_message) or message.text[:2] in ('! ', '? '):
+    if (message.text in ('!', '?') and message.reply_to_message) or message.text[:2] in ('! ', '? '):
         text = message.text[2:]
         message_id = message.message_id
         destination = 'ru' if message.text[0] == '?' else 'uk'
@@ -180,6 +176,10 @@ async def talking(message):
             message_id = message.reply_to_message.message_id
         text = translator.translate(text, dest=destination).text
         await bot.send_message(snk_chat, text, reply_to_message_id=message_id)
+
+    elif translator.detect(message.text).lang == 'uk':
+        text = translator.translate(message.text, dest='ru').text
+        await message.reply(text, reply=True)
 
     elif answer:
         messages = (await mongo.find('messages'))['messages']
