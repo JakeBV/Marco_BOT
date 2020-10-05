@@ -9,7 +9,6 @@ from datetime import timedelta
 from io import BytesIO
 
 from aiogram import Bot, types
-from aiogram.types import ContentType
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from aiogram.utils import exceptions
@@ -62,7 +61,8 @@ async def activity_settings(message):
                                 caption=f'<a href="tg://user?id={user_id}">Не лезь</a>, оно тебя сожрет')
 
 
-@dp.message_handler(chat_id=snk_chat, content_types=[ContentType.NEW_CHAT_MEMBERS, ContentType.LEFT_CHAT_MEMBER],
+@dp.message_handler(chat_id=snk_chat,
+                    content_types=[types.ContentType.NEW_CHAT_MEMBERS, types.ContentType.LEFT_CHAT_MEMBER],
                     state='*')
 async def new_chat_members(message):
     chat_id = message.chat.id
@@ -111,7 +111,7 @@ async def new_chat_members(message):
                         await bot.unban_chat_member(chat_id, user_id)
 
 
-@dp.message_handler(content_types=ContentType.ANY, chat_id=snk_chat,
+@dp.message_handler(content_types=types.ContentType.ANY, chat_id=snk_chat,
                     state=verification.VerificationStates.S1_NOT_VERIFICATION |
                     verification.VerificationStates.S2_VERIFICATION |
                     verification.VerificationStates.S6_START |
@@ -294,7 +294,7 @@ async def send_message(message: types.Message):
 
 
 @dp.message_handler(types.ChatType.is_private, state=verification.VerificationStates.S4_CREATE_MEMES,
-                    content_types=ContentType.PHOTO)
+                    content_types=types.ContentType.PHOTO)
 async def send_message(message: types.Message):
     user_id = message.from_user.id
     if message.caption is None:
