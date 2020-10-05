@@ -166,18 +166,20 @@ async def when(message):
 async def talking(message):
     weights = (await mongo.find('admins_panel'))['weights']
     answer = random.choices([True, False], weights=weights)[0]
+    detected_language = translator.detect(message.text).lang
 
-    if (message.text in ('!', '?') and message.reply_to_message) or message.text[:2] in ('! ', '? '):
+    if (message.text in ('!', '?') and (message.reply_to_message.text or message.reply_to_message.caption)) \
+            or message.text[:2] in ('! ', '? '):
         text = message.text[2:]
         message_id = message.message_id
         destination = 'ru' if message.text[0] == '?' else 'uk'
         if message.reply_to_message:
-            text = message.reply_to_message.text
+            text = message.reply_to_message.text or message.reply_to_message.caption
             message_id = message.reply_to_message.message_id
         text = translator.translate(text, dest=destination).text
         await bot.send_message(snk_chat, text, reply_to_message_id=message_id)
 
-    elif translator.detect(message.text).lang == 'uk':
+    elif detected_language == 'uk':
         text = translator.translate(message.text, dest='ru').text
         await message.reply(text, reply=True)
 
@@ -191,7 +193,7 @@ async def talking(message):
             await message.reply(text, reply=random.choice([True, False]))
         except exceptions.BadRequest:
             await message.reply(text, reply=False)
-    if 3 <= len(message.text) <= 65 and bool(re.search('[а-яА-Я]', message.text)):
+    if 3 <= len(message.text) <= 65 and detected_language in ('ru', 'rubg', 'uk', 'be'):
         await mongo.update('messages', {'$push': {'messages': message.text}})
 
 
