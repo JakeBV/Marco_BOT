@@ -74,6 +74,7 @@ async def new_chat_members(message):
             await bot.promote_chat_member(snk_chat, user_id, can_delete_messages=True, can_invite_users=True,
                                           can_restrict_members=True, can_pin_messages=True, can_promote_members=True,
                                           can_change_info=True)
+            await bot.set_chat_administrator_custom_title(chat_id, user_id, 'Анхель')
             await bot.send_message(chat_id,
                                    f'С возвращением, <a href="tg://user?id={user_id}">'
                                    f'{message.from_user.first_name}</a>!\nДержи свой значок и пистолет')
