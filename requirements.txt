@@ -24,7 +24,6 @@ hyperframe==5.2.0
 idna==2.8
 motor==2.0.0
 multidict==4.5.2
-num2t4ru==2.0.0
 Pillow==6.2.1
 pipenv==2020.8.13
 pycosat==0.6.3

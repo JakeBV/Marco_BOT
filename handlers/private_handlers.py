@@ -1,0 +1,82 @@
+from io import BytesIO
+from os import path
+
+from aiogram.types import InputMediaPhoto
+
+from config import angel
+from config import me
+from config import snk_chat
+from misc import bot
+from misc import dp
+from services import keyboards
+from services import mongo
+from utils import json_worker
+from utils import meme_creator
+from utils import utils
+
+
+@dp.message_handler(chat_type='private', state='p1_create_memes', content_types=['text', 'photo'])
+async def create_memes(message):
+    user_id = message.from_user.id
+    if (message.caption is None) or (len(message.caption.splitlines()) != 2):
+        await bot.send_message(user_id, 'Отправь <b>картинку с подписью</b>. Подпись должна быть в таком формате:\n'
+                                        '<code>Верхняя строка\nНижняя строка</code>\nили\n<code>Верхняя строка\n*'
+                                        '</code>\nили\n<code>*\nНижняя строка</code>',
+                               reply_markup=keyboards.cancel_button())
+    else:
+        top_string, bottom_string = message.caption.splitlines()
+        if len(top_string) > 89 or len(bottom_string) > 89:
+            await bot.send_message(user_id, 'Каждая строка должна быть не более 90 символов, включая пробелы',
+                                   reply_markup=keyboards.cancel_button())
+        else:
+            hourglass = 'https://telegra.ph/file/cc0dc4ff9bf6be68d5f63.gif'
+            message_id = (await bot.send_animation(user_id, hourglass)).message_id
+            downloaded = await bot.download_file_by_id(message.photo[-1].file_id)
+            image = BytesIO()
+            image.write(downloaded.getvalue())
+            ready_top_string, ready_bottom_string = meme_creator.prepare_text(top_string, bottom_string)
+            memes = meme_creator.make_meme(ready_top_string, ready_bottom_string, image, user_id)
+            file_id = (await bot.edit_message_media(InputMediaPhoto(memes), user_id, message_id)).photo[-1].file_id
+            await bot.edit_message_caption(user_id, message_id, caption='Готово!',
+                                           reply_markup=keyboards.memes_send(file_id))
+
+
+@dp.message_handler(chat_type='private', state='p2_send_message', content_types=['text', 'photo'])
+async def send_message_to_chat(message):
+    user_id = message.from_user.id
+    if message.text:
+        await bot.send_message(snk_chat, message.text)
+    else:
+        await bot.send_photo(snk_chat, message.photo[-1].file_id, message.caption)
+    await dp.current_state(user=user_id, chat=user_id).finish()
+    await bot.send_message(user_id, 'Сообщение отправлено',
+                           reply_markup=keyboards.start_keyboard(user_id == me or user_id == angel))
+
+
+@dp.message_handler(chat_type='private', state='p3_add_stickers', content_types='text')
+async def add_stickers(message):
+    user_id = message.from_user.id
+    filename = path.join('data', 'stickers.json')
+    stickers = json_worker.read_json(filename)
+    if utils.check_validity_stickerpack(message.text, stickers):
+        stickers_title, stickers_link = message.text.split('|')
+        stickers.update({stickers_title.strip(): stickers_link.strip()})
+        json_worker.write_json(stickers, filename)
+        await dp.current_state(user=user_id, chat=user_id).finish()
+        await bot.send_message(user_id, 'Стикерпак успешно добавлен',
+                               reply_markup=keyboards.start_keyboard(user_id == me or user_id == angel))
+    else:
+        await bot.send_message(user_id, 'Неверный формат или стикерпак уже добавлен',
+                               reply_markup=keyboards.cancel_button())
+
+
+@dp.message_handler(chat_type='private', state='*')
+async def start(message):
+    user_id = message.from_user.id
+    users_in_db = (await mongo.find('new_chat_members'))['users']
+    if str(user_id) not in users_in_db and user_id != me:
+        users_info = {'first_name': message.from_user.first_name,
+                      'username': message.from_user.username}
+        await mongo.update('new_chat_members', {'$set': {f'users.{user_id}': users_info}})
+    await bot.send_message(user_id, 'Привет! Я - Марко БОТ. Выбери команду',
+                           reply_markup=keyboards.start_keyboard(user_id == me or user_id == angel))
