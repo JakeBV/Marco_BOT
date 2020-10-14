@@ -1,5 +1,6 @@
-import textwrap
 from io import BytesIO
+from os import path
+from textwrap import wrap
 
 from PIL import ImageFont
 from PIL import Image
@@ -11,7 +12,7 @@ def prepare_text(top_string, bottom_string):
     for string in top_string, bottom_string:
         if len(string) > 45:
             string = string.strip()
-            strings.append('\n'.join(textwrap.wrap(string, width=45)))
+            strings.append('\n'.join(wrap(string, width=45)))
         else:
             strings.append(string)
     top_string, bottom_string = strings
@@ -19,26 +20,26 @@ def prepare_text(top_string, bottom_string):
 
 
 
-# исходник этого куска https://github.com/danieldiekmeier/memegenerator
-def make_meme(topString, bottomString, b, filename):
+#кусок из этого исходника https://github.com/danieldiekmeier/memegenerator
+def make_meme(topString, bottomString, image, user_id):
     if len(topString) > 45:
         topString = topString.splitlines()
     if len(bottomString) > 45:
         bottomString = bottomString.splitlines()
 
-    img = Image.open(b)
+    img = Image.open(image)
     imageSize = img.size
 
     # find biggest font size that works
     fontSize = int(imageSize[1] / 5)
 
-    font = ImageFont.truetype("fonts/Lobster.ttf", fontSize)
+    font = ImageFont.truetype(path.join("fonts", "Lobster.ttf"), fontSize)
     topTextSize = font.getsize(topString)
     bottomTextSize = font.getsize(bottomString)
 
     while topTextSize[0] > imageSize[0] - 20 or bottomTextSize[0] > imageSize[0] - 20:
         fontSize = fontSize - 1
-        font = ImageFont.truetype("fonts/Lobster.ttf", fontSize)
+        font = ImageFont.truetype(path.join("fonts", "Lobster.ttf"), fontSize)
         topTextSize = font.getsize(topString)
         bottomTextSize = font.getsize(bottomString)
 
@@ -105,8 +106,8 @@ def make_meme(topString, bottomString, b, filename):
                           align='center')
         draw.text(bottomTextPosition, bottomString, (255, 255, 255), font=font)
 
-    b = BytesIO()
-    b.name = filename
-    img.save(b, 'PNG')
-    b.seek(0)
-    return b
+    memes = BytesIO()
+    memes.name = f'{user_id}.png'
+    img.save(memes, 'PNG')
+    memes.seek(0)
+    return memes
