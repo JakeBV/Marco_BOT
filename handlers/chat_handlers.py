@@ -16,7 +16,7 @@ from utils import json_worker
 async def activity_settings(message):
     activity = json_worker.read_json(path.join('data', 'weights.json'))
     activity_keyboard, text = keyboards.activity_settings_keyboard(activity[0])
-    await message.reply(f'Тут можно настроить мою активность. {text}', reply_markup=activity_keyboard, reply=True)
+    await message.reply(f'Тут можно настроить мою активность. {text}', reply_markup=activity_keyboard)
 
 
 @dp.message_handler(is_imitation_talk=True, chat_id=snk_chat, content_types='any', state='*')
