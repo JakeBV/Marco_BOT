@@ -4,6 +4,7 @@ from random import random
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.types import InlineKeyboardButton
 
+from services import mongo
 from utils import json_worker
 
 
@@ -60,9 +61,8 @@ def start_keyboard(its_admin):
     return st_keyboard
 
 
-def stickers_keyboard(its_admin):
+def stickers_keyboard(its_admin, stickers):
     stk_keyboard = InlineKeyboardMarkup(row_width=2)
-    stickers = json_worker.read_json(path.join('data', 'stickers.json'))
     for k, v in stickers.items():
         stk_keyboard.insert(InlineKeyboardButton(k, url=v))
     if its_admin:
@@ -72,9 +72,8 @@ def stickers_keyboard(its_admin):
     return stk_keyboard
 
 
-def del_stickers_keyboard():
+def del_stickers_keyboard(stickers):
     dstk_keyboard = InlineKeyboardMarkup()
-    stickers = json_worker.read_json(path.join('data', 'stickers.json'))
     for k in stickers:
         dstk_keyboard.add(InlineKeyboardButton(k, callback_data=k))
     dstk_keyboard.add(InlineKeyboardButton('Отмена', callback_data='cancel'))

@@ -1,5 +1,4 @@
 from io import BytesIO
-from os import path
 
 from aiogram.types import InputMediaPhoto
 
@@ -10,7 +9,6 @@ from misc import bot
 from misc import dp
 from services import keyboards
 from services import mongo
-from utils import json_worker
 from utils import meme_creator
 from utils import utils
 
@@ -56,15 +54,14 @@ async def send_message_to_chat(message):
 @dp.message_handler(chat_type='private', state='p3_add_stickers', content_types='text')
 async def add_stickers(message):
     user_id = message.from_user.id
-    filename = path.join('data', 'stickers.json')
-    stickers = json_worker.read_json(filename)
+    stickers = (await mongo.find('admins_panel'))['stickers']
     if utils.check_validity_stickerpack(message.text, stickers):
         stickers_title, stickers_link = message.text.split('|')
-        stickers.update({stickers_title.strip(): stickers_link.strip()})
-        json_worker.write_json(stickers, filename)
+        await mongo.update('admins_panel', {'$set': {f'stickers.{stickers_title.strip()}': stickers_link.strip()}})
+        stickers = (await mongo.find('admins_panel'))['stickers']
         await dp.current_state(user=user_id, chat=user_id).finish()
         await bot.send_message(user_id, 'Стикерпак успешно добавлен',
-                               reply_markup=keyboards.start_keyboard(user_id == me or user_id == angel))
+                               reply_markup=keyboards.stickers_keyboard(user_id == me or user_id == angel, stickers))
     else:
         await bot.send_message(user_id, 'Неверный формат или стикерпак уже добавлен',
                                reply_markup=keyboards.cancel_button())
