@@ -1,11 +1,7 @@
-from os import path
 from random import random
 
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.types import InlineKeyboardButton
-
-from services import mongo
-from utils import json_worker
 
 
 verified_dict = {'intruder': 'Я вторженец',

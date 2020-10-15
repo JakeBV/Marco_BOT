@@ -1,5 +1,3 @@
-from os import path
-
 from config import angel
 from config import me
 from misc import bot
@@ -7,7 +5,6 @@ from misc import dp
 from services import keyboards
 from services import mongo
 from services.states import PrivateStates
-from utils import json_worker
 
 
 @dp.callback_query_handler(lambda callback: callback.data == 'create_memes', chat_type='private', state='*')
