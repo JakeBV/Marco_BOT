@@ -35,7 +35,7 @@ def text_to_image(message, message_id):
         message = '\n'.join(text)
     width, height = 15 * columns, 40 * rows
     background = Image.new('RGB', (width, height), (255, 255, 255))
-    font = ImageFont.truetype(path.join('fonts', 'Cambria.ttf', 30))
+    font = ImageFont.truetype(path.join('fonts', 'Cambria.ttf'), 30)
     draw = ImageDraw.Draw(background)
     w, h = draw.textsize(message, font)
     draw.text(((width - w) / 2, (height - h) / 2), message, font=font, align="center", fill=0)

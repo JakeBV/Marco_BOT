@@ -1,4 +1,5 @@
 from config import translator
+from config import snk_chat
 from misc import bot
 from misc import dp
 
@@ -8,7 +9,7 @@ async def translate_message(message):
     destination = 'ru' if message.text[0] == '?' else 'uk'
     text = translator.translate(message.text[2:], dest=destination).text
     if text:
-        await bot.send_message(message.chat.id, text, reply_to_message_id=message.message_id)
+        await message.reply(text)
 
 
 @dp.message_handler(is_reply_text=True, text=['!', '?'], state='*')
@@ -19,10 +20,10 @@ async def translate_reply(message):
     await bot.send_message(message.chat.id, text, reply_to_message_id=message.reply_to_message.message_id)
 
 
-@dp.message_handler(is_ukrainian=True, state='*')
+@dp.message_handler(is_ukrainian=True, chat_id=snk_chat, state='*')
 async def translate_ukrainian(message):
     text = translator.translate(message.text, dest='ru').text
-    await message.reply(text, reply=True)
+    await message.reply(text)
 
 
 @dp.message_handler(is_reply_text=True, text='!lang', state='*')

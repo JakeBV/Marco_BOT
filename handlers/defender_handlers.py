@@ -62,11 +62,13 @@ async def new_chat_members(message):
 
 
 @dp.message_handler(chat_id=snk_chat, content_types='left_chat_member', state='*')
-@dp.message_handler(is_new_user=True, chat_id=snk_chat, content_types='any', state='s1_not_verification')
+@dp.message_handler(chat_id=snk_chat, content_types='any', state='s1_not_verification')
 async def del_message(message):
     await bot.delete_message(snk_chat, message.message_id)
 
 
+@dp.edited_message_handler(is_new_user=True, is_spam=True, chat_id=snk_chat, content_types='any',
+                           state='s2_verification')
 @dp.message_handler(is_new_user=True, is_spam=True, chat_id=snk_chat, content_types='any', state='s2_verification')
 async def hunt_for_spam(message):
     user_id = message.from_user.id

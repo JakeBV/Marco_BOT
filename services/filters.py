@@ -5,10 +5,13 @@ from time import time
 from aiogram import types
 from aiogram.dispatcher.filters.filters import BoundFilter
 
+import misc
 from config import angel
+from config import snk_chat
 from config import translator
 from services import keyboards
 from services import mongo
+from services import spam_checks
 from utils import json_worker
 
 
@@ -29,9 +32,11 @@ class IsNewUser(BoundFilter):
         self.is_new_user = is_new_user
 
     async def check(self, message):
-        get_users_info = (await mongo.find('new_chat_members'))['new_chat_members'].get(f'{message.from_user.id}')
+        user_id = message.from_user.id
+        get_users_info = (await mongo.find('new_chat_members'))['new_chat_members'].get(f'{user_id}')
         if (get_users_info is None) or (time() - get_users_info['join_time'] < 86400):
             return True
+        await misc.dp.current_state(user=user_id, chat=snk_chat).finish()
 
 
 class IsSpam(BoundFilter):
@@ -41,7 +46,11 @@ class IsSpam(BoundFilter):
         self.is_spam = is_spam
 
     async def check(self, message: types.Message):
-        return message.entities or message.caption_entities or message.reply_markup
+        if message.entities or message.caption_entities:
+            return await spam_checks.search_entities(message.entities or message.caption_entities,
+                                                     message.text or message.caption)
+        elif message.reply_markup:
+            return bool(spam_checks.search_urls_in_keyboard(message.reply_markup.inline_keyboard))
 
 
 class IsVerification(BoundFilter):

@@ -17,18 +17,18 @@ from utils import utils
 async def create_memes(message):
     user_id = message.from_user.id
     if (message.caption is None) or (len(message.caption.splitlines()) != 2):
-        await bot.send_message(user_id, 'Отправь <b>картинку с подписью</b>. Подпись должна быть в таком формате:\n'
-                                        '<code>Верхняя строка\nНижняя строка</code>\nили\n<code>Верхняя строка\n*'
-                                        '</code>\nили\n<code>*\nНижняя строка</code>',
-                               reply_markup=keyboards.cancel_button())
+        await message.reply('Отправь <b>картинку с подписью</b>. Подпись должна быть в таком формате:\n<code>Верхняя '
+                            'строка\nНижняя строка</code>\nили\n<code>Верхняя строка\n*</code>\nили\n<code>*\nНижняя '
+                            'строка</code>', reply_markup=keyboards.cancel_button())
     else:
         top_string, bottom_string = message.caption.splitlines()
         if len(top_string) > 89 or len(bottom_string) > 89:
-            await bot.send_message(user_id, 'Каждая строка должна быть не более 90 символов, включая пробелы',
-                                   reply_markup=keyboards.cancel_button())
+            await message.reply('Каждая строка должна быть не более 90 символов, включая пробелы',
+                                reply_markup=keyboards.cancel_button())
         else:
             hourglass = 'https://telegra.ph/file/cc0dc4ff9bf6be68d5f63.gif'
             message_id = (await bot.send_animation(user_id, hourglass)).message_id
+            await bot.send_chat_action(message.chat.id, 'upload_photo')
             downloaded = await bot.download_file_by_id(message.photo[-1].file_id)
             image = BytesIO()
             image.write(downloaded.getvalue())
@@ -47,8 +47,7 @@ async def send_message_to_chat(message):
     else:
         await bot.send_photo(snk_chat, message.photo[-1].file_id, message.caption)
     await dp.current_state(user=user_id, chat=user_id).finish()
-    await bot.send_message(user_id, 'Сообщение отправлено',
-                           reply_markup=keyboards.start_keyboard(user_id == me or user_id == angel))
+    await message.reply('Сообщение отправлено', reply_markup=keyboards.start_keyboard(user_id in (me, angel)))
 
 
 @dp.message_handler(chat_type='private', state='p3_add_stickers', content_types='text')
@@ -60,11 +59,10 @@ async def add_stickers(message):
         await mongo.update('admins_panel', {'$set': {f'stickers.{stickers_title.strip()}': stickers_link.strip()}})
         stickers = (await mongo.find('admins_panel'))['stickers']
         await dp.current_state(user=user_id, chat=user_id).finish()
-        await bot.send_message(user_id, 'Стикерпак успешно добавлен',
-                               reply_markup=keyboards.stickers_keyboard(user_id == me or user_id == angel, stickers))
+        await message.reply('Стикерпак успешно добавлен',
+                            reply_markup=keyboards.stickers_keyboard(user_id in (me, angel), stickers))
     else:
-        await bot.send_message(user_id, 'Неверный формат или стикерпак уже добавлен',
-                               reply_markup=keyboards.cancel_button())
+        await message.reply('Неверный формат или стикерпак уже добавлен', reply_markup=keyboards.cancel_button())
 
 
 @dp.message_handler(chat_type='private', state='*')
@@ -75,5 +73,5 @@ async def start(message):
         users_info = {'first_name': message.from_user.first_name,
                       'username': message.from_user.username}
         await mongo.update('new_chat_members', {'$set': {f'users.{user_id}': users_info}})
-    await bot.send_message(user_id, 'Привет! Я - Марко БОТ. Выбери команду',
-                           reply_markup=keyboards.start_keyboard(user_id == me or user_id == angel))
+    await message.reply('Привет! Я - Марко БОТ. Выбери команду', reply=False,
+                        reply_markup=keyboards.start_keyboard(user_id in (me, angel)))
