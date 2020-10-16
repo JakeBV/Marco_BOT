@@ -34,7 +34,7 @@ async def stickers_list(callback_query):
     stickers = (await mongo.find('admins_panel'))['stickers']
     await bot.answer_callback_query(callback_query.id)
     await bot.edit_message_text('Стикерпаки', user_id, callback_query.message.message_id,
-                                reply_markup=keyboards.stickers_keyboard(user_id == me or user_id == angel, stickers))
+                                reply_markup=keyboards.stickers_keyboard(user_id in (me, angel), stickers))
 
 
 @dp.callback_query_handler(lambda callback: callback.data == 'add_stickers', chat_type='private', state='*')
@@ -63,7 +63,7 @@ async def cancel(callback_query):
     await bot.answer_callback_query(callback_query.id)
     await dp.current_state(user=user_id, chat=user_id).finish()
     await bot.edit_message_text('Привет! Я - Марко БОТ. Выбери команду', user_id, callback_query.message.message_id,
-                                reply_markup=keyboards.start_keyboard(user_id == me or user_id == angel))
+                                reply_markup=keyboards.start_keyboard(user_id in (me, angel)))
 
 
 @dp.callback_query_handler(chat_type='private', state='p4_del_stickers')
@@ -74,4 +74,4 @@ async def confirm_del_stickers(callback_query):
     await bot.answer_callback_query(callback_query.id)
     await dp.current_state(user=user_id, chat=user_id).finish()
     await bot.send_message(user_id, 'Стикерпак успешно удален',
-                           reply_markup=keyboards.stickers_keyboard(user_id == me or user_id == angel, stickers))
+                           reply_markup=keyboards.stickers_keyboard(user_id in (me, angel), stickers))
