@@ -2,7 +2,6 @@ from os import path
 from random import choices
 from time import time
 
-from aiogram import types
 from aiogram.dispatcher.filters.filters import BoundFilter
 
 import misc
@@ -45,7 +44,7 @@ class IsSpam(BoundFilter):
     def __init__(self, is_spam):
         self.is_spam = is_spam
 
-    async def check(self, message: types.Message):
+    async def check(self, message):
         if message.entities or message.caption_entities:
             return await spam_checks.search_entities(message.entities or message.caption_entities,
                                                      message.text or message.caption)
@@ -59,7 +58,7 @@ class IsVerification(BoundFilter):
     def __init__(self, is_verification):
         self.is_verification = is_verification
 
-    async def check(self, callback_query: types.CallbackQuery):
+    async def check(self, callback_query):
         return callback_query.data.split('=')[0] in keyboards.verified_dict
 
 
@@ -79,7 +78,7 @@ class IsReplyText(BoundFilter):
     def __init__(self, is_reply_text):
         self.is_reply_text = is_reply_text
 
-    async def check(self, message: types.Message):
+    async def check(self, message):
         if message.reply_to_message:
             return message.reply_to_message.text or message.reply_to_message.caption
 
@@ -90,8 +89,9 @@ class IsUkrainian(BoundFilter):
     def __init__(self, is_ukrainian):
         self.is_ukrainian = is_ukrainian
 
-    async def check(self, message: types.Message):
-        return translator.detect(message.text).lang == 'uk'
+    async def check(self, message):
+        if message.text or message.caption:
+            return translator.detect(message.text or message.caption).lang == 'uk'
 
 
 class IsActivitySettings(BoundFilter):
@@ -100,7 +100,7 @@ class IsActivitySettings(BoundFilter):
     def __init__(self, is_activity_settings):
         self.is_activity_settings = is_activity_settings
 
-    async def check(self, callback_query: types.CallbackQuery):
+    async def check(self, callback_query):
         return callback_query.data in keyboards.activities_dict
 
 
@@ -121,5 +121,5 @@ class IsSendMemes(BoundFilter):
     def __init__(self, is_send_memes):
         self.is_send_memes = is_send_memes
 
-    async def check(self, inline_query: types.InlineQuery):
+    async def check(self, inline_query):
         return (inline_query.query.split('=')[0] == 'send_memes') and (len(inline_query.query.split('=')) == 2)

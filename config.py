@@ -7,7 +7,7 @@ from googletrans import Translator
 translator = Translator()
 
 config = ConfigParser()
-config.read(path.join('data', 'config.ini'))
+config.read(path.join('data', 'config.ini.back'))
 
 token = config['BOT']['token']
 snk_chat = int(config['BOT']['chat'])

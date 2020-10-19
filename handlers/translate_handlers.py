@@ -20,9 +20,9 @@ async def translate_reply(message):
     await bot.send_message(message.chat.id, text, reply_to_message_id=message.reply_to_message.message_id)
 
 
-@dp.message_handler(is_ukrainian=True, chat_id=snk_chat, state='*')
+@dp.message_handler(is_ukrainian=True, content_types='any', chat_id=snk_chat, state='*')
 async def translate_ukrainian(message):
-    text = translator.translate(message.text, dest='ru').text
+    text = translator.translate(message.text or message.caption, dest='ru').text
     await message.reply(text)
 
 

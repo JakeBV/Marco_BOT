@@ -24,7 +24,7 @@ async def send_message_to_chat(callback_query):
     user_id = callback_query.from_user.id
     await bot.answer_callback_query(callback_query.id)
     await dp.current_state(user=user_id, chat=user_id).set_state(PrivateStates.P2_SEND_MESSAGE)
-    await bot.edit_message_text('Пришли сообщение, которое нужно отправить. Это может быть картинка или текст',
+    await bot.edit_message_text('Пришли сообщение, которое нужно отправить. Это может быть стикер, картинка или текст',
                                 user_id, callback_query.message.message_id, reply_markup=keyboards.cancel_button())
 
 
