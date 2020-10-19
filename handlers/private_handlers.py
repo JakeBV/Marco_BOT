@@ -19,11 +19,11 @@ async def create_memes(message):
     if (message.caption is None) or (len(message.caption.splitlines()) != 2):
         await message.reply('Отправь <b>картинку с подписью</b>. Подпись должна быть в таком формате:\n<code>Верхняя '
                             'строка\nНижняя строка</code>\nили\n<code>Верхняя строка\n*</code>\nили\n<code>*\nНижняя '
-                            'строка</code>', reply_markup=keyboards.cancel_button())
+                            'строка</code>', reply=False, reply_markup=keyboards.cancel_button())
     else:
         top_string, bottom_string = message.caption.splitlines()
         if len(top_string) > 89 or len(bottom_string) > 89:
-            await message.reply('Каждая строка должна быть не более 90 символов, включая пробелы',
+            await message.reply('Каждая строка должна быть не более 90 символов, включая пробелы', reply=False,
                                 reply_markup=keyboards.cancel_button())
         else:
             hourglass = 'https://telegra.ph/file/cc0dc4ff9bf6be68d5f63.gif'
