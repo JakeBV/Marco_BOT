@@ -31,6 +31,6 @@ async def send_when(inline_query):
     dates = await mongo.find('admins_panel')
     text = release_calendar.days_counter(dates).replace('У меня', 'Сейчас')
     article = [InlineQueryResultArticle(id=uuid4().hex, input_message_content=InputTextMessageContent(text),
-                                        title=text[text.index('\n'):])]
+                                        title=text[text.index('\n') + 1:])]
     await bot.answer_inline_query(inline_query.id, article, switch_pm_text='Другие команды',
                                   switch_pm_parameter='start')

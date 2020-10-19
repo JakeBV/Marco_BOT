@@ -39,21 +39,16 @@ async def create_memes(message):
                                            reply_markup=keyboards.memes_send(file_id))
 
 
-@dp.message_handler(chat_type='private', state='p2_send_message', content_types=['text', 'photo', 'sticker'])
+@dp.message_handler(chat_type='private', state='p2_send_message', content_types='any')
 async def send_message_to_chat(message):
     user_id = message.from_user.id
-    if message.text:
-        await bot.send_message(snk_chat, message.text)
-    elif message.sticker:
-        await bot.send_sticker(snk_chat, message.sticker.file_id)
-    else:
-        await bot.send_photo(snk_chat, message.photo[-1].file_id, message.caption)
+    await message.send_copy(snk_chat)
     await dp.current_state(user=user_id, chat=user_id).finish()
     await message.reply('Сообщение отправлено', reply_markup=keyboards.start_keyboard(user_id in (me, angel)),
                         reply=False)
 
 
-@dp.message_handler(chat_type='private', state='p3_add_stickers', content_types='text')
+@dp.message_handler(chat_type='private', state='p3_add_stickers')
 async def add_stickers(message):
     user_id = message.from_user.id
     stickers = (await mongo.find('admins_panel'))['stickers']
