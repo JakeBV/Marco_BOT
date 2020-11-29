@@ -5,7 +5,7 @@ from time import time
 from aiogram.dispatcher.filters.filters import BoundFilter
 
 import misc
-from config import angel
+from config import me
 from config import snk_chat
 from config import translator
 from services import keyboards
@@ -14,14 +14,14 @@ from services import spam_checks
 from utils import json_worker
 
 
-class IsAngel(BoundFilter):
-    key = 'is_angel'
+class IsMe(BoundFilter):
+    key = 'is_me'
 
-    def __init__(self, is_angel):
-        self.is_angel = is_angel
+    def __init__(self, is_me):
+        self.is_me = is_me
 
     async def check(self, message):
-        return message.from_user.id == angel and angel in [user.id for user in message.new_chat_members]
+        return message.from_user.id == me and me in [user.id for user in message.new_chat_members]
 
 
 class IsNewUser(BoundFilter):

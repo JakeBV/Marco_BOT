@@ -7,7 +7,6 @@ from aiogram.utils.exceptions import MessageToEditNotFound
 from aiogram.utils.exceptions import MessageToDeleteNotFound
 from aiogram.utils.exceptions import MessageNotModified
 
-from config import angel
 from config import me
 from config import snk_chat
 from misc import bot
@@ -19,14 +18,14 @@ from services.states import VerificationStates
 from utils import utils
 
 
-@dp.message_handler(is_angel=True, chat_id=snk_chat, content_types='new_chat_members', state='*')
+@dp.message_handler(is_me=True, chat_id=snk_chat, content_types='new_chat_members', state='*')
 async def return_rights(message):
     await bot.delete_message(snk_chat, message.message_id)
-    await bot.promote_chat_member(snk_chat, angel, can_delete_messages=True, can_invite_users=True,
+    await bot.promote_chat_member(snk_chat, me, can_delete_messages=True, can_invite_users=True,
                                   can_restrict_members=True, can_pin_messages=True, can_promote_members=True,
                                   can_change_info=True)
-    await bot.set_chat_administrator_custom_title(snk_chat, angel, 'Анхель')
-    await bot.send_message(snk_chat, f'С возвращением, <a href="tg://user?id={angel}">'
+    await bot.set_chat_administrator_custom_title(snk_chat, me, 'Не анимечник')
+    await bot.send_message(snk_chat, f'С возвращением, <a href="tg://user?id={me}">'
                                      f'{message.from_user.first_name}</a>!\nДержи свой значок и пистолет')
 
 

@@ -7,7 +7,7 @@ from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from config import token
 from services import filters
 
-custom_filters = [filters.IsActivitySettings, filters.IsAngel, filters.IsAntispamSettings, filters.IsImitationTalk,
+custom_filters = [filters.IsActivitySettings, filters.IsMe, filters.IsAntispamSettings, filters.IsImitationTalk,
                   filters.IsNewUser, filters.IsReplyText, filters.IsSendMemes, filters.IsSpam, filters.IsUkrainian,
                   filters.IsVerification]
 
